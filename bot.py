@@ -13,7 +13,7 @@ import factory
 import util
 
 # Log config.
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     format='[%(levelname)s][%(asctime)s][%(filename)s]at line:%(lineno)d %(message)s',
                     datefmt='%D %H:%M:%S')
 
@@ -66,6 +66,8 @@ async def group_message_handler(bot_app: GraiaMiraiApplication, message: Message
         # Reply message.
         if msg_send is not None:
             await bot_app.sendGroupMessage(group, message.create([Plain(msg_send)]))
+        else:
+            logging.warning("No message will be send. May be there are some errors.")
 
 
 @bcc.receiver("FriendMessage")
@@ -83,7 +85,8 @@ async def friend_message_listener(bot_app: GraiaMiraiApplication, message: Messa
 
     if msg_send is not None:
         await bot_app.sendFriendMessage(friend, message.create([Plain(msg_send)]))
-
+    else:
+        logging.warning("No message will be send. May be there are some errors.")
 
 logging.info("Success start QQ bot.")
 app.launch_blocking()

@@ -41,10 +41,6 @@ def exec_bot_command_group(input_msg: str) -> str:
         logging.info("Match command:抽号.")
         send_msg = func.bot_get_random_member()
 
-    elif command_head == "项目":
-        logging.info("Match command:项目.")
-        send_msg = func.bot_get_develop_info()
-
     elif command_head == "课表":
         logging.info("Match command:课表.")
         send_msg = func.bot_get_classes_table(commands["args"])
@@ -52,6 +48,10 @@ def exec_bot_command_group(input_msg: str) -> str:
     elif command_head == "待办":
         logging.info("Match command:待办.")
         send_msg = func.bot_get_todo_list(5)
+
+    elif command_head == "项目":
+        logging.info("Match command:项目.")
+        send_msg = func.bot_get_develop_info()
 
     else:
         logging.warning("UnKnow command.")

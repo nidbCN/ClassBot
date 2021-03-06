@@ -8,23 +8,25 @@ import logging
 
 from NewCAS.LoginCAS import Login as nLg
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='[%(levelname)s][%(asctime)s][%(filename)s]at line:%(lineno)d %(message)s',
-                    datefmt='%D %H:%M:%S')
-
 
 # bot: Function list
 # Arguments: /
 # Return: str:Message of bot function list.
 def bot_get_functions_list() -> str:
-    msg = "功能列表：\n"
+    logging.info("Match method bot_get_functions_list.")
+    msg = "未找到功能列表"
     i = 0
     length = len(util.dump_list)
-    for fun_str in util.dump_list:
-        added_msg = f"{fun_str}\n"
-        if i == length - 1:
-            added_msg = fun_str
-        msg += added_msg
+    if length != 0:
+        msg = "功能列表：\n"
+        logging.warning("Null function list. Check file dump.json.")
+    else:
+        # Get list from dump file.
+        for fun_str in util.dump_list:
+            added_msg = f"{fun_str}\n"
+            if i == length - 1:
+                added_msg = fun_str
+            msg += added_msg
     return msg
 
 
@@ -32,38 +34,40 @@ def bot_get_functions_list() -> str:
 # Arguments: /
 # Return: str:Message of local(set in config file) weather.
 def bot_get_local_weather() -> str:
+    logging.info("Match method bot_get_local_weather.")
     location_id = util.config_location
     wea_info = weather.get_weather_from_id(location_id)
-    msg = "无法获取天气，默认天气设置错误，请联系开发者\n"
+    msg = "无法获取天气，"
     if wea_info["code"] == 0:
         wea_msg = util.make_weather_msg(wea_info["value"])
         if wea_msg["code"] == 0:
+            logging.debug(f"Success get weather of {location_id}.\nValue:{wea_info}")
             msg = wea_msg["value"]
         else:
-            msg += wea_msg["msg"]
+            logging.error(f"Cannot get weather.Value:{wea_info}")
+            msg += "More: " + wea_msg["msg"]
     else:
-        msg += wea_info["msg"]
+        logging.error("Default location has wrong, location id is:" + location_id)
+        msg += "默认天气设置错误，请联系开发者\nMore: " + wea_info["msg"]
     return msg
 
 
 # bot: Get weather of somewhere.
-# Arguments: list:List of loaction.
+# Arguments: list:List of location.
 # Return: str:Message of input location weather.
 def bot_get_location_weather(input_args: list) -> str:
+    logging.debug("Match method bot_get_local_weather.")
     msg = "无法获取天气，"
     wea_src = util.get_weather(input_args)
     if wea_src["code"] == 0:
-
-        print("HERE" + str(wea_src))
-
         wea_msg = util.make_weather_msg(wea_src["value"])
         if wea_msg["code"] == 0:
             msg = wea_msg["value"]
         else:
-            msg += "内部错误，请稍后重试或联系开发者\n" + wea_msg["msg"]
+            msg += "内部错误，请稍后重试或联系开发者\nMore: " + wea_msg["msg"]
     else:
-        msg += "未找到城市，请检查输入 Tips:行政单位用空格分割，" \
-               "如“北京 东城区”或“山西 太原 迎泽“\n" + wea_src["msg"]
+        msg += "未找到城市，请检查输入。\n提示：行政单位用空格分割，" \
+               "如“北京 东城区”或“山西 太原 迎泽“\nMore: " + wea_src["msg"]
 
     return msg
 
@@ -73,10 +77,8 @@ def bot_get_location_weather(input_args: list) -> str:
 # Return: str:Message about a random member.
 def bot_get_random_member():
     class_member = util.dump_member
-    rand = random.randint(1, len(class_member))
-    if rand >= 49:
-        msg = f"抽到导员{class_member[rand]} ！"
-    elif rand != 17:
+    rand = random.randint(1, len(class_member) - 1)
+    if rand != 17:
         msg = f"抽到{class_member[rand]}同学，学号：20070401" + \
               "{:0>2d}".format(rand + 1)
     else:
@@ -153,9 +155,9 @@ def bot_get_todo_list(cnt: int) -> str:
             if now_time < item["time"]:
                 todo_time = util.get_time_str(item["time"])
                 if item["type"] == "活动":
-                    ret += f"{str(i+1)}. {todo_time},在{item['address']}进行{item['description']}"
+                    ret += f"{str(i + 1)}. {todo_time},在{item['address']}进行{item['description']}"
                 elif item["type"] == "作业":
-                    ret += f"{str(i+1)}. 作业{item['description']},截至{todo_time}"
+                    ret += f"{str(i + 1)}. 作业{item['description']},截至{todo_time}"
 
                 if i != cnt - 1 and i != list_length - 1:
                     ret += "\n"

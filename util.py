@@ -59,6 +59,7 @@ except KeyError as ex:
 
 # Interoperate the commands with blank or lines
 def command_interpreter(input_str: str) -> dict:
+    list_command = []
     # Split commands
     if '\n' in input_str:
         list_command = input_str.split('\n')
@@ -185,19 +186,16 @@ def get_todo_item_from_msg(input_body: list) -> dict:
 def get_weather(location: list) -> dict:
     ret = {"code": 0, "msg": "Success get weather.", "value": ""}
     loc_id = weather.get_location_id_from_name(location)
-
-    print(loc_id)
-
     if loc_id["code"] == 0:
         loc_wea = weather.get_weather_from_id(loc_id["value"])
         if loc_wea["code"] == 0:
             ret["value"] = loc_wea["value"]
         else:
             ret["code"] = 1
-            ret["msg"] = "Can not get weather info."
+            ret["msg"] = "Can not get weather info: " + loc_wea["msg"]
     else:
         ret["code"] = 2
-        ret["code"] = "Can not found location."
+        ret["msg"] = "Can not found location: " + loc_id["msg"]
     return ret
 
 
