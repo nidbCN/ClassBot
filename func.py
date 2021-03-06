@@ -22,6 +22,7 @@ def bot_get_functions_list() -> str:
         logging.warning("Null function list. Check file dump.json.")
     else:
         # Get list from dump file.
+        logging.debug(f"The functions list in file dump.json is:\n{util.dump_list}")
         for fun_str in util.dump_list:
             added_msg = f"{fun_str}\n"
             if i == length - 1:
@@ -44,7 +45,7 @@ def bot_get_local_weather() -> str:
             logging.debug(f"Success get weather of {location_id}.\nValue:{wea_info}")
             msg = wea_msg["value"]
         else:
-            logging.error(f"Cannot get weather.Value:{wea_info}")
+            logging.error(f"Cannot get weather.\nValue:{wea_info}")
             msg += "More: " + wea_msg["msg"]
     else:
         logging.error("Default location has wrong, location id is:" + location_id)
@@ -56,18 +57,25 @@ def bot_get_local_weather() -> str:
 # Arguments: list:List of location.
 # Return: str:Message of input location weather.
 def bot_get_location_weather(input_args: list) -> str:
-    logging.debug("Match method bot_get_local_weather.")
+    logging.info("Match method bot_get_location_weather.")
     msg = "无法获取天气，"
     wea_src = util.get_weather(input_args)
     if wea_src["code"] == 0:
+        logging.debug(f"Success get weather.\nValue:" + wea_src)
         wea_msg = util.make_weather_msg(wea_src["value"])
         if wea_msg["code"] == 0:
+            logging.debug(f"Success make weather message.\nValue:" + wea_msg)
             msg = wea_msg["value"]
         else:
+            logging.error(f"Cannot make weather message.\nValue:" + wea_msg)
             msg += "内部错误，请稍后重试或联系开发者\nMore: " + wea_msg["msg"]
-    else:
+    elif wea_src["code"] == 2:
+        logging.warning("Cannot find weather, maybe user input a wrong location.\nValue" + wea_src)
         msg += "未找到城市，请检查输入。\n提示：行政单位用空格分割，" \
                "如“北京 东城区”或“山西 太原 迎泽“\nMore: " + wea_src["msg"]
+    else:
+        logging.error(f"Cannot get weather of {input_args}.\nValue:{wea_src}")
+        msg += "内部错误，请稍后重试或联系开发者\nMore: " + wea_src["msg"]
 
     return msg
 
@@ -76,8 +84,10 @@ def bot_get_location_weather(input_args: list) -> str:
 # Arguments: /
 # Return: str:Message about a random member.
 def bot_get_random_member():
+    logging.info("Match method bot_get_random_member.")
     class_member = util.dump_member
     rand = random.randint(1, len(class_member) - 1)
+    logging.debug("Get rand number:" + rand)
     if rand != 17:
         msg = f"抽到{class_member[rand]}同学，学号：20070401" + \
               "{:0>2d}".format(rand + 1)
@@ -90,16 +100,23 @@ def bot_get_random_member():
 # Argument: list:List of student info, contains id and password.
 # Return: str:Message about scores info.
 # TODO(mail@gaein.cn): Formatted return info of CAS.
+# Grades by yanlc39.
 def bot_get_classes_scores(input_args: list) -> str:
+    logging.info("Match method bot_get_classes_scores.")
+
     func = nLg(input_args[0], input_args[1])
     json = func.getGrades()
+
     send_msg = "您好:"
 
     if json is None:
+        logging.warning("Cannot get student score.")
         send_msg += "查询失败，请检查帐号密码是否正确。如无误可能为服务器网络错误或教务系统出现故障。"
     elif json["totalCount"] == 0:
+        logging.warning("Total count is 0.\nValue:" + json)
         send_msg += "没有查询到考试成绩，请确认考试成绩已经公布。"
     else:
+        logging.debug("Success get scores.\nValue" + json)
         send_msg += f"{json['items'][0]['xm']}，您的考试成绩(百分制)如下:\n"
         for item in json["items"]:
             send_msg += f"{item['kcmc']}---{item['cj']}\n"
@@ -108,17 +125,21 @@ def bot_get_classes_scores(input_args: list) -> str:
 
 
 # bot: Show school class table.
-# Arguments: list:Input class ebug info.
+# Arguments: list:Input class debug info.
 # Return: str:Message of class info.
 def bot_get_classes_table(input_args: list) -> str:
+    logging.info("Match method bot_get_classes_table.")
+
     ret = "无法查询到课表\n"
 
     if len(input_args) > 0:
         class_info = util.get_classes(int(input_args[0]))
+        logging.debug(f"Get debug classes table of {input_args[0]}.\nValue:{class_info}")
     else:
         class_info = util.get_classes(0)
 
     if class_info["code"] == 0:
+        logging.debug("Success get class info")
         ret = class_info["value"]
     else:
         ret += class_info["msg"]
@@ -126,10 +147,11 @@ def bot_get_classes_table(input_args: list) -> str:
     return ret
 
 
-# bot: Develop infomation.
+# bot: Project information.
 # Arguments: /
-# Return: str:Message of devinfo.
-def bot_get_develop_info() -> str:
+# Return: str:Message of project info.
+def bot_get_project_info() -> str:
+    logging.info("Match method bot_get_project_info.")
     return util.config_info
 
 
@@ -138,6 +160,7 @@ def bot_get_develop_info() -> str:
 # Return: str:Message of todoList.
 # TODO(mail@gaein.cn): Add a function in util.py to get todoList.
 def bot_get_todo_list(cnt: int) -> str:
+    logging.info("Match method bot_get_todo_list.")
     ret = "待办事项有：\n"
 
     to_do_list = util.dump_todo
@@ -147,21 +170,30 @@ def bot_get_todo_list(cnt: int) -> str:
     else:
         # Sort by time.
         to_do_list_sorted = sorted(to_do_list, key=operator.itemgetter("time"))
+
+        logging.debug("Get todo list after sort.\nValue:" + to_do_list_sorted)
+
         # Define vars.
+        has_item = False
+
         i = 0
         now_time = time.time()
         # A loop output tooItems.
         for item in to_do_list_sorted:
             if now_time < item["time"]:
+                has_item = True
                 todo_time = util.get_time_str(item["time"])
                 if item["type"] == "活动":
                     ret += f"{str(i + 1)}. {todo_time},在{item['address']}进行{item['description']}"
                 elif item["type"] == "作业":
                     ret += f"{str(i + 1)}. 作业{item['description']},截至{todo_time}"
-
+                # Last line.
                 if i != cnt - 1 and i != list_length - 1:
                     ret += "\n"
             i += 1
+
+        if not has_item:
+            ret = "无待办事项，好好休息叭"
 
         util.config_todo = to_do_list_sorted
         util.dump_changes()
@@ -172,14 +204,17 @@ def bot_get_todo_list(cnt: int) -> str:
 # Arguments: list:Input body part(Split input message except line1).
 # Return: str:Result message of add to todoList.
 def bot_admin_add_todo_list(input_body: list) -> str:
-    ret = "添加失败\n"
+    logging.info("Match method bot_admin_add_todo_list.")
+    ret = "添加失败\nMore: "
     new_item = util.get_todo_item_from_msg(input_body)
     if new_item["code"] == 0:
         util.dump_todo.append(new_item["value"])
         util.config_todo = sorted(util.dump_todo, key=operator.itemgetter("time"))
         util.dump_changes()
+        logging.debug("Success add item to list.")
         ret = "添加成功"
     else:
+        logging.error("Cannot make todo item.\nValue:" + new_item)
         ret += new_item["msg"]
     return ret
 
@@ -187,8 +222,8 @@ def bot_admin_add_todo_list(input_body: list) -> str:
 # bot-Admin: Find item in todoList.
 # Arguments: str:Keyword of what you find.
 # Return: str:Result (contains aid) of the found item.
-# TODO(mail@gaein.cn): Use factory to handle todoList function.
 def bot_admin_find_todo(keyword: str) -> str:
+    logging.info("Match method bot_admin_find_todo.")
     ret = "查询结果如下:\n"
     has_ret = False
     list_len = len(util.dump_todo)
@@ -203,24 +238,28 @@ def bot_admin_find_todo(keyword: str) -> str:
         i += 1
     ret += f"共找到{cnt}条记录"
     if not has_ret:
+        logging.debug("Cannot found keyword" + keyword)
         ret = f"无法找到关键字{keyword}"
     return ret
 
 
 # bot-Admin: Clear todoList.
 def bot_admin_clear_todo_list() -> str:
+    logging.info("Match method bot_admin_clear_todo_list.")
     util.config_todo = []
-    ret = "保存失败\n"
+    ret = "保存失败\nMore:"
     result = util.dump_changes()
     if result["code"] == 0:
         ret = "保存成功"
     else:
+        logging.error("Cannot save result.\nValue:" + result)
         ret += result["msg"]
     return ret
 
 
 # bot-Admin: Change item in todoList.
 def bot_admin_change_todo_list(aid_input: str, input_body: list) -> str:
+    logging.info("Match method bot_admin_change_todo_list.")
     ret = "更改失败"
     cnt = 0
     for todo_item in util.dump_todo:

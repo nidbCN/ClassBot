@@ -51,7 +51,7 @@ def exec_bot_command_group(input_msg: str) -> str:
 
     elif command_head == "项目":
         logging.info("Match command:项目.")
-        send_msg = func.bot_get_develop_info()
+        send_msg = func.bot_get_project_info()
 
     else:
         logging.warning("UnKnow command.")
