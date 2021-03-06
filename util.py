@@ -59,18 +59,13 @@ except KeyError as ex:
 
 # Interoperate the commands with blank or lines
 def command_interpreter(input_str: str) -> dict:
-    # Init vars
-    body_command = []
-
     # Split commands
     if '\n' in input_str:
         list_command = input_str.split('\n')
         main_command = list_command[0].split()
-        i = 1
-        length = len(list_command)
-        while i < length:
-            body_command.append(list_command[i])
-        count_command = i
+
+        list_command.pop(0)
+        count_command = len(list_command)
     else:
         main_command = input_str.split()
         count_command = 1
@@ -79,7 +74,7 @@ def command_interpreter(input_str: str) -> dict:
     main_command.pop(0)
     # return commands
     ret = {"count": count_command, "head": command_head,
-           "args": main_command, "body": body_command}
+           "args": main_command, "body": list_command}
     return ret
 
 

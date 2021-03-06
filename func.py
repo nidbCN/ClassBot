@@ -166,8 +166,8 @@ def bot_get_todo_list(cnt: int) -> str:
     return ret
 
 
-# bot-Admin: Add a todoItem to todoList.
-# Arguments: list:Input body part(Splited input message except line1).
+# bot-Admin:  Add a todoItem to todoList.
+# Arguments: list:Input body part(Split input message except line1).
 # Return: str:Result message of add to todoList.
 def bot_admin_add_todo_list(input_body: list) -> str:
     ret = "添加失败\n"

@@ -13,10 +13,11 @@ import factory
 import util
 
 # Log config.
-
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='[%(levelname)s][%(asctime)s][%(filename)s]at line:%(lineno)d %(message)s',
                     datefmt='%D %H:%M:%S')
+
+logging.info("Starting QQ bot, please wait.")
 
 # bot
 loop = asyncio.get_event_loop()
@@ -38,11 +39,12 @@ app = GraiaMiraiApplication(
 
 @bcc.receiver("GroupMessage")
 async def group_message_handler(bot_app: GraiaMiraiApplication, message: MessageChain, group: Group):
+    # TODO(mail@gaein.cn): Use "Middle Ware"
     # Only spy groups in config file.
     if str(group.id) in util.config_group:
-        logging.info(f"监测到群{str(group.id)}消息")
+        logging.info(f"Detected message from group: {str(group.id)}")
 
-        # Interpreter commmands input.
+        # Interpreter commands input.
         input_msg = message.asDisplay()
 
         # Get message to send.
@@ -69,19 +71,19 @@ async def group_message_handler(bot_app: GraiaMiraiApplication, message: Message
 @bcc.receiver("FriendMessage")
 async def friend_message_listener(bot_app: GraiaMiraiApplication, message: MessageChain, friend: Friend):
     # Interpreter commands.
-    msg_send = None
     input_msg = message.asDisplay()
 
     if util.is_admin(str(friend.id)):
-        logging.info(f"检测到管理员{friend.id}消息")
-        msg_send = factory.exec_bot_command_friebd_admin(input_msg)
+        logging.info(f"Detected message from admin: {friend.id}")
+        msg_send = factory.exec_bot_command_friend_admin(input_msg)
 
     else:
-        logging.info(f"检测到普通用户{friend.id}消息")
+        logging.info(f"Detected message from friend: {friend.id}")
         msg_send = factory.exec_bot_command_friend(input_msg)
 
     if msg_send is not None:
         await bot_app.sendFriendMessage(friend, message.create([Plain(msg_send)]))
 
-logging.info("bot启动")
+
+logging.info("Success start QQ bot.")
 app.launch_blocking()
