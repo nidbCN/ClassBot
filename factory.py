@@ -90,9 +90,6 @@ def exec_bot_command_friend_admin(input_msg: str) -> str:
     if command_head == "待办":
         command_args = commands["args"]
         if "添加" in command_args:
-
-            # logging.log("Match command:待办-添加.")
-
             if "body" in commands.keys():
                 msg_send = func.bot_admin_add_todo_list(commands["body"])
             else:
@@ -100,9 +97,15 @@ def exec_bot_command_friend_admin(input_msg: str) -> str:
         elif "清除" in command_args:
             msg_send = func.bot_admin_clear_todo_list()
         elif "修改" in commands["args"]:
-            msg_send = func.bot_admin_change_todo_list(commands["args"][1], commands["body"])
+            if len(command_args) != 1:
+                msg_send = "参数：事件ID"
+            else:
+                msg_send = func.bot_admin_change_todo_list(commands["args"][1], commands["body"])
         elif "查找" in commands["args"]:
-            msg_send = func.bot_admin_find_todo(commands["args"])
+            if len(command_args) != 1:
+                msg_send = "参数：关键词"
+            else:
+                msg_send = func.bot_admin_find_todo(commands["args"])
 
     elif command_head == "课表":
         msg_send = func.bot_get_classes_table(commands["args"])
