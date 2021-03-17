@@ -43,7 +43,7 @@ async def group_message_handler(bot_app: GraiaMiraiApplication, message: Message
     # Only spy groups in config file.
     if str(group.id) in util.config_group:
         logging.info(f"Detected message from group: {str(group.id)}")
-
+        print(message);
         # Interpreter commands input.
         input_msg = message.asDisplay()
 
